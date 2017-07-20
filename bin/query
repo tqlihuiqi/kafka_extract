@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+
+import getopt
+import os
+import sys
+
+home = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, home)
+
+from src.query import TopicQuery
+
+
+def print_help():
+    """ 显示帮助命令 """
+
+    message = """
+        
+        query命令用于查询指定Kafka集群Topic可导出数据是时间范围
+    
+        -c    指定Kafka集群名称, 请见etc/config.yaml
+        -t    指定查询的Topic名称
+        -s    查询导出Offsets起始时间范围, 参数格式: "年-月-日 时:分:秒" ("2017-01-01 10:00:01")
+        -e    查询导出Offsets结束时间范围, 参数格式: "年-月-日 时:分:秒" ("2017-01-01 11:00:01")
+    
+    """
+
+    print(message)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hc:t:s:e:", ["help"])
+        params = {"cluster": None, "topic": None, "startDate": None, "endDate": None}
+        
+        for name, value in opts:
+            if name in ("-h", "--help"):
+                print_help()
+        
+            elif name == "-c":
+                params["cluster"] = value
+        
+            elif name == "-t":
+                params["topic"] = value
+        
+            elif name == "-s":
+                params["startDate"] = value
+        
+            elif name == "-e":
+                params["endDate"] = value
+
+        if None in params.values():
+            raise ValueError
+
+    except (getopt.GetoptError, ValueError):
+        print_help()
+
+    try:
+        for result in TopicQuery.run(**params):
+            print(result)
+    
+    except Exception as e:
+        print("Error: ", e)
+

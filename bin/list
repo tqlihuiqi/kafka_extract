@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+
+import getopt
+import os
+import sys
+
+home = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, home)
+
+from src.base import base
+
+
+def print_help():
+    """ 显示帮助命令 """
+
+    message = """
+        
+        list命令用于列出collector收集的kafka集群与topic
+        未指定参数将列出全部Kafka集群
+    
+        --cluster    指定集群名称, 列出集群中所有可用导出数据的Topic
+
+    """
+
+    print(message)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "cluster="])
+        cluster = None
+        
+        for name, value in opts:
+            if name in ("-h", "--help"):
+                print_help()
+
+            if name == "--cluster":
+                cluster = value
+
+    except getopt.GetoptError:
+        print_help()
+
+    if not cluster:
+        clusters = base.config["collector"]["clusters"].keys()
+        
+        for cluster in clusters:
+            print("Cluster: ", cluster)
+
+    else:
+        try:
+            topics = base.config["collector"]["clusters"][cluster]["topics"]
+            print("Cluster: ", cluster)
+            
+            for topic in topics:
+                print("%9s" % "Topic: ", topic)
+
+        except KeyError:
+            print("Cluster name does not exist.")
+
+

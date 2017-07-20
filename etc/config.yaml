@@ -1,0 +1,43 @@
+collector:
+    
+    # 收集数据分钟间隔
+    interval_minute: 10
+
+    # LevelDB数据目录
+    datadir: /Users/lihuiqi/datadir
+
+    # Kafka集群配置
+    clusters:
+        
+        # 收集Kafka集群的唯一名称
+        testCluster:
+            
+            # Kafka Brokers
+            brokers:
+                - 10.0.0.1:9092
+                - 10.0.0.2:9092
+            
+            # 收集的 Kafka Topics
+            topics:
+                - testTopic1
+                - testTopic2
+
+            # 收集历史数据保留小时
+            retention_hour: 48
+
+        
+        # 收集Kafka集群的唯一名称
+        cluster2:
+            
+            # Kafka Brokers
+            brokers:
+                - 10.0.0.3:9092
+                - 10.0.0.4:9092
+            
+            # 收集的 Kafka Topics
+            topics:
+                - testTopic3
+                - testTopic4
+
+            # 收集历史数据保留小时
+            retention_hour: 24

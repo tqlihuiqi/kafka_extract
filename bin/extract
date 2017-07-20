@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+
+import getopt
+import os
+import sys
+
+home = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, home)
+
+from src.extractor import TopicExtractor
+
+
+def print_help():
+    """ 显示帮助命令 """
+
+    message = """
+        
+        extract命令用于导出指定Kafka集群Topic的数据并写入到指定目标
+    
+        -c    指定Kafka集群名称, 可用list命令查询
+        -t    指定查询的Topic名称, 可用list命令查询
+        -s    query查询结果, 指定导出Offsets精确起始时间, 时间格式: "年-月-日 时:分:秒"
+        -e    query查询结果, 指定导出Offsets精确结束时间, 时间格式: "年-月-日 时:分:秒"
+
+        --output    指定导出目标类型
+            disk    导出数据到本地磁盘
+
+                --disk_dir         写入本地磁盘的目录名称
+                --avro_schema      指定反序列化AVRO数据的Schema
+          
+            kafka   导出数据到Kafka Topic
+
+                --target_brokers     写入的Broker地址, 参数格式: ip1:port,ip2:port
+                --target_topic       写入的Topic名称
+                --compression_type   写入的压缩类型, [snappy | lz4 | gzip], 默认值: snappy
+    
+    """
+
+    print(message)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hc:t:s:e:", ["help", "output=", "disk_dir=", "avro_schema=", "target_brokers=", "target_topic=", "compression_type="])
+       
+        params = {
+            "basic": {
+                "cluster": None, 
+                "topic": None, 
+                "startDate": None, 
+                "endDate": None, 
+                "output": None
+            },
+            "other": {
+                "diskPath": None,
+                "avroSchema": None,
+                "targetBrokers": None, 
+                "targetTopic": None, 
+                "compressType": None
+            }
+        }
+
+        for name, value in opts:
+            if name in ("-h", "--help"):
+                print_help()
+        
+            elif name == "-c":
+                params["basic"]["cluster"] = value
+        
+            elif name == "-t":
+                params["basic"]["topic"] = value
+        
+            elif name == "-s":
+                params["basic"]["startDate"] = value
+        
+            elif name == "-e":
+                params["basic"]["endDate"] = value
+
+            elif name == "--output":
+                params["basic"]["output"] = value
+
+            elif name == "--disk_dir":
+                params["other"]["diskPath"] = value
+
+            elif name == "--avro_schema":
+                params["other"]["avroSchema"] = value
+
+            elif name == "--target_brokers":
+                params["other"]["targetBrokers"] = value
+
+            elif name == "--target_topic":
+                params["other"]["targetTopic"] = value
+
+            elif name == "--compression_type":
+                params["other"]["compressType"] = value
+
+        if None in params["basic"].values():
+            raise ValueError
+
+        if params["basic"]["output"] == "disk":
+            if not params["other"]["diskPath"]:
+                raise ValueError
+
+        elif params["basic"]["output"] == "kafka":
+            if not params["other"]["targetBrokers"] and not params["other"]["targetTopic"]:
+                raise ValueError
+
+        else:
+            raise ValueError
+
+    except (getopt.GetoptError, ValueError):
+        print_help()
+
+    try:
+        p = TopicExtractor(**params["basic"], **params["other"])
+        p.run()
+    
+    except Exception as e:
+        print("Error: ", e)
+
+
