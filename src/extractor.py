@@ -45,8 +45,10 @@ class TopicExtractor(object):
         db = base.init_leveldb(cluster=cluster, topic=topic)
 
         try:
-            self.startPosition = json.loads(db.Get(startKey))
-            self.stopPosition = json.loads(db.Get(endKey))
+            #self.startPosition = json.loads(db.Get(startKey))
+            #self.stopPosition = json.loads(db.Get(endKey))
+            self.startPosition = json.loads(str(db.Get(startKey), encoding="utf-8"))
+            self.stopPosition = json.loads(str(db.Get(endKey), encoding="utf-8"))
 
         except KeyError:
             raise KeyError("No offset is available.")
@@ -67,6 +69,7 @@ class TopicExtractor(object):
 
     def get_progress(self):
         """ 进度条提示 """
+
 
         for partition, items in self.progress.items():
             sys.stdout.write("Partition %s: %s/%s Offsets." % (partition, *items) + "\n")
